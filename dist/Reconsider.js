@@ -34,31 +34,26 @@ var Reconsider = function () {
 
     this._ops = {};
 
+    if (!this.r || typeof this.r !== 'function' || typeof this.r.db !== 'function') {
+      throw new Error('No or invalid database driver object passed to Reconsider constructor.');
+    }
+
     if (!this.config.db) {
       throw new Error('No database name set in Reconsider config.');
     }
   }
 
   _createClass(Reconsider, [{
-    key: 'init',
-    value: function init() {
-      var _this = this;
-
-      return this._createDatabase().then(function () {
-        return _this._createMigrationsTable();
-      });
-    }
-  }, {
     key: 'migrateUp',
     value: function migrateUp() {
-      var _this2 = this;
+      var _this = this;
 
       var logger = this.logger;
 
       logger.info('↑ Performing database migrations ↑');
 
-      return this.init().then(function () {
-        return _bluebird2.default.resolve(_this2._ops);
+      return this._init().then(function () {
+        return _bluebird2.default.resolve(_this._ops);
       });
     }
   }, {
@@ -72,6 +67,15 @@ var Reconsider = function () {
         'foo': 2.124156,
         'bar': 5.125,
         'baz': 0.01026
+      });
+    }
+  }, {
+    key: '_init',
+    value: function _init() {
+      var _this2 = this;
+
+      return this._createDatabase().then(function () {
+        return _this2._createMigrationsTable();
       });
     }
   }, {

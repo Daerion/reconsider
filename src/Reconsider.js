@@ -15,6 +15,10 @@ class Reconsider {
 
     this._ops = { }
 
+    if (!this.r || typeof this.r !== 'function' || typeof this.r.db !== 'function') {
+      throw new Error('No or invalid database driver object passed to Reconsider constructor.')
+    }
+
     if (!this.config.db) {
       throw new Error('No database name set in Reconsider config.')
     }
@@ -24,17 +28,12 @@ class Reconsider {
     return this.r.db(this.config.db)
   }
 
-  init () {
-    return this._createDatabase()
-      .then(() => this._createMigrationsTable())
-  }
-
   migrateUp () {
     const { logger } = this
 
     logger.info('↑ Performing database migrations ↑')
 
-    return this.init().then(() => Promise.resolve(this._ops))
+    return this._init().then(() => Promise.resolve(this._ops))
   }
 
   migrateDown () {
@@ -47,6 +46,11 @@ class Reconsider {
       'bar': 5.125,
       'baz': 0.01026
     })
+  }
+
+  _init () {
+    return this._createDatabase()
+      .then(() => this._createMigrationsTable())
   }
 
   _createDatabase () {
