@@ -5,14 +5,7 @@ import Promise from 'bluebird'
 
 import { getLoggerObject } from './util'
 
-const defaults = {
-  db: null,
-  migrations: {
-    dir: 'migrations',
-    table: '_reconsider_migrations'
-  },
-  swallowErrors: false
-}
+const defaults = require('../defaults.json')
 
 class Reconsider {
   constructor (r, config, logger) {
