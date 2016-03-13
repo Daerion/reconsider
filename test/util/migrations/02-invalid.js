@@ -1,3 +1,3 @@
 'use strict'
 
-// This file does nothing
+// Invalid migration file, does not export "up" and "down" functions

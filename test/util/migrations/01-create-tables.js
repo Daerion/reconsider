@@ -6,11 +6,11 @@ module.exports = {
   up: function (db, logger) {
     logger.verbose(`Creating tables ${tables.join(', ')}`)
 
-    return Promise.all(tables.map((table) => db.tableCreate(table).run()))
+    return Promise.mapSeries(tables, (table) => db.tableCreate(table).run())
   },
   down: function (db, logger) {
     logger.verbose(`Dropping tables ${tables.join(', ')}`)
 
-    return Promise.all(tables.map((table) => db.tableDrop(table).run()))
+    return Promise.mapSeries(tables, (table) => db.tableDrop(table).run())
   }
 }
