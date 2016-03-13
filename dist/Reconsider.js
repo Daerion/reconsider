@@ -288,7 +288,8 @@ var Reconsider = function () {
 
         var start = new Date();
 
-        return func(db, logger).then(function () {
+        // @todo does it make sense to pass in both "db" and "r"? Don't think it does.
+        return func(db, logger, _this7.r).then(function () {
           var completed = new Date();
 
           _this7._registerOp(id, start, completed);

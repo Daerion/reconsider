@@ -184,7 +184,8 @@ class Reconsider {
 
       const start = new Date()
 
-      return func(db, logger)
+      // @todo does it make sense to pass in both "db" and "r"? Don't think it does.
+      return func(db, logger, this.r)
         .then(() => {
           const completed = new Date()
 
