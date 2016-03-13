@@ -8,8 +8,8 @@ const dbConfig = {
   authKey: process.env.DB_AUTH_KEY
 }
 
-const db = process.env.DB_NAME || 'reconsider_mocha'
+const dbName = process.env.DB_NAME || 'reconsider_mocha'
 const connection = rethinkdb(dbConfig)
 
 export default connection
-export { db }
+export { dbName }
