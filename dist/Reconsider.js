@@ -191,7 +191,6 @@ var Reconsider = function () {
           return false;
         }
 
-        // @todo Properly implement FUNC_NAME constants here
         return Object.assign({}, info, { up: up, down: down });
       } catch (e) {
         logger.warn('× Error while attempting to require file ' + filepath + ': ' + e.message);
