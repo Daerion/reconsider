@@ -63,6 +63,7 @@ var Reconsider = function () {
 
       var logger = this.logger;
 
+
       logger.info('↑ Performing database migrations ↑');
 
       return this._init().then(function () {
@@ -81,6 +82,7 @@ var Reconsider = function () {
       var _this2 = this;
 
       var logger = this.logger;
+
 
       logger.info('↓ Reverting database migrations ↓');
 
@@ -109,6 +111,7 @@ var Reconsider = function () {
       var logger = this.logger;
       var dir = this.config.migrations.dir;
 
+
       logger.debug('Reading list of migrations from directory ' + dir + '.');
 
       if (!pending && !completed) {
@@ -116,7 +119,7 @@ var Reconsider = function () {
         throw new Error('Retreiving neither pending nor completed migrations is nonsensical.');
       }
 
-      var infoObjects = undefined;
+      var infoObjects = void 0;
 
       if (!pending && completed) {
         // Retrieve only completed migrations (i.e. only those stored in the info table)
@@ -188,6 +191,7 @@ var Reconsider = function () {
           return false;
         }
 
+        // @todo Properly implement FUNC_NAME constants here
         return Object.assign({}, info, { up: up, down: down });
       } catch (e) {
         logger.warn('× Error while attempting to require file ' + filepath + ': ' + e.message);
@@ -212,6 +216,7 @@ var Reconsider = function () {
       var r = this.r;
       var logger = this.logger;
       var db = this.config.db;
+
 
       return r.dbList().run().then(function (dbs) {
         if (!dbs.includes(db)) {
@@ -242,6 +247,7 @@ var Reconsider = function () {
 
       var logger = this.logger;
       var tableName = this.config.migrations.table;
+
 
       return this.db.tableList().run().then(function (tables) {
         if (!tables.includes(tableName)) {
