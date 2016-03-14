@@ -6,6 +6,10 @@
   "scripts": {
     "test": "mocha --require test/util/babel-register"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daerion/reconsider.git"
+  },
   "keywords": [
     "rethinkdb",
     "migration"
@@ -17,6 +21,7 @@
     "deepmerge": "^0.2.10"
   },
   "devDependencies": {
+    "babel-cli": "^6.6.5",
     "babel-eslint": "^5.0.0",
     "babel-plugin-syntax-async-functions": "^6.5.0",
     "babel-plugin-syntax-object-rest-spread": "^6.5.0",
