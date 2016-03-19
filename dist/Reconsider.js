@@ -71,15 +71,6 @@ var Reconsider = function () {
         return _this.getMigrations(true, false, exclude);
       }).then(function (migrations) {
         return _this._runMigrationFunctions(migrations, FUNC_NAME_UP);
-      }).then(function (completionInfo) {
-        return completionInfo.map(function (_ref) {
-          var id = _ref.id;
-          return id;
-        });
-      }).then(function (ids) {
-        return logger.info('Ran migrations ' + ids.map(function (id) {
-          return '"' + id + '"';
-        }).join(', ') + '.');
       }).then(function () {
         return _this._ops;
       });
@@ -97,15 +88,6 @@ var Reconsider = function () {
         return _this2.getMigrations(false, true, exclude);
       }).then(function (migrations) {
         return _this2._runMigrationFunctions(migrations, FUNC_NAME_DOWN);
-      }).then(function (completionInfo) {
-        return completionInfo.map(function (_ref2) {
-          var id = _ref2.id;
-          return id;
-        });
-      }).then(function (revertedIds) {
-        return logger.info('Reverted migrations ' + revertedIds.map(function (id) {
-          return '"' + id + '"';
-        }).join(', ') + '.');
       }).then(function () {
         return _this2._ops;
       });
@@ -152,16 +134,16 @@ var Reconsider = function () {
             });
           });
         }).then(function (migrationInfo) {
-          return !completed ? migrationInfo.filter(function (_ref3) {
-            var completed = _ref3.completed;
+          return !completed ? migrationInfo.filter(function (_ref) {
+            var completed = _ref.completed;
             return completed === false;
           }) : migrationInfo;
         });
       }
 
       return infoObjects.then(function (info) {
-        return info.filter(function (_ref4) {
-          var id = _ref4.id;
+        return info.filter(function (_ref2) {
+          var id = _ref2.id;
           return !exclude.includes(id);
         });
       }).then(function (info) {

@@ -69,10 +69,8 @@ class Reconsider {
     logger.info('↑ Performing database migrations ↑')
 
     return this._init()
-      .then(() => this.getMigrations(true, false, exclude))
-      .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_UP))
-      .then((completionInfo) => completionInfo.map(({ id }) => id))
-      .then((ids) => logger.info(`Ran migrations ${ids.map((id) => `"${id}"`).join(', ')}.`))
+      .then(() => this.getMigrations(true, false, exclude)) // Return a list of all pending migrations
+      .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_UP)) // Run "up" function for each one
       .then(() => this._ops)
   }
 
@@ -91,9 +89,7 @@ class Reconsider {
 
     return this._init()
       .then(() => this.getMigrations(false, true, exclude)) // Retrieve a list of all previously run migrations
-      .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_DOWN)) // Run the "down" function for each
-      .then((completionInfo) => completionInfo.map(({ id }) => id)) // Return an array of IDs of reverted migrations
-      .then((revertedIds) => logger.info(`Reverted migrations ${revertedIds.map((id) => `"${id}"`).join(', ')}.`))
+      .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_DOWN)) // Run "down" function for each one
       .then(() => this._ops) // Return operation timing info
   }
 
