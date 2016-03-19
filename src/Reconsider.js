@@ -4,10 +4,9 @@ import fs from 'fs'
 import path from 'path'
 import Promise from 'bluebird'
 
+import { getLoggerObject } from './logger'
+
 const readDirAsync = Promise.promisify(fs.readdir)
-
-import { getLoggerObject } from './util'
-
 const defaults = require('../defaults.json')
 
 const FUNC_NAME_UP = 'up'
@@ -32,7 +31,8 @@ class Reconsider {
    * @param {string} config.db - Database name
    * @param {string} [config.sourceDir] - Directory containing migrations files
    * @param {string} [config.tableName] - rethinkdb table name containing migration information (will be created automatically)
-   * @param {object} [logger] - logger object
+   * @param {string} [config.logLevel] - Minimum log level when using default logging implementation (one of debug, verbose, info, warn or error)
+   * @param {(object|false)} [logger] - logger object, or false to disable logging altogether
    * @public
    */
   constructor (r, config = { }, logger) {
@@ -42,7 +42,7 @@ class Reconsider {
 
     this.r = r
     this.config = Object.assign({}, defaults, config)
-    this.logger = getLoggerObject(logger)
+    this.logger = getLoggerObject(logger, this.config.logLevel)
 
     this._ops = [ ]
 

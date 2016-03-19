@@ -1,5 +1,6 @@
 {
   "db": null,
   "sourceDir": "migrations",
-  "tableName": "_reconsider_migration"
+  "tableName": "_reconsider_migration",
+  "logLevel": "info"
 }

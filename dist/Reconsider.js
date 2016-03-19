@@ -21,7 +21,7 @@ var _bluebird = require('bluebird');
 
 var _bluebird2 = _interopRequireDefault(_bluebird);
 
-var _util = require('./util');
+var _logger = require('./logger');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30,7 +30,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var readDirAsync = _bluebird2.default.promisify(_fs2.default.readdir);
-
 var defaults = require('../defaults.json');
 
 var FUNC_NAME_UP = 'up';
@@ -49,7 +48,7 @@ var Reconsider = function () {
 
     this.r = r;
     this.config = Object.assign({}, defaults, config);
-    this.logger = (0, _util.getLoggerObject)(logger);
+    this.logger = (0, _logger.getLoggerObject)(logger, this.config.logLevel);
 
     this._ops = [];
 
