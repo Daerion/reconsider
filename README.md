@@ -91,10 +91,9 @@ recon.migrateUp()
   })
 ```
 
-One consequence of Reconsider's lack of error catching is that an error in any migration will prevent all subsequent migrations from running. This, too, is intended behavior, since database migrations will more often than not rely on changes introduced by previous migrations.
-Since no automatic rollback is performed, and since all successful migrations will still register, `migrateUp` and `migrateDown` can safely be called again once the problem has been resolved.
+One consequence of Reconsider's lack of error catching is that an error in any migration will prevent all subsequent migrations from running. This, too, is intended behavior, since database migrations will more often than not rely on changes introduced by previous migrations. Since no automatic rollback is performed, and since all successful migrations will still register, `migrateUp` and `migrateDown` can safely be called again once the problem has been resolved.
  
-This should also encourage the use to write small migrations that change one thing at a time, as opposed to huge migration files with several chained `.then`s. 
+This should also encourage the user to write small migrations that change one thing at a time, as opposed to huge migration files with several chained `.then`s. 
 
 ### Logging
 Reconsider will output various messages to stdout by default, using `console.log`, `console.info` and `console.warn` as appropriate. All output is categorized into one of the following log levels: `debug`, `verbose`, `info`, `warn`, `error`. Minimum log level can be set via the `logLevel` config option.
