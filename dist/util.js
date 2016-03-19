@@ -19,10 +19,12 @@ function getLoggerObject(providedLogger) {
   }
 
   if (!providedLogger) {
+    var log = console.log.bind(console);
+
     return {
-      log: console.log.bind(console),
-      debug: console.log.bind(console),
-      verbose: console.log.bind(console),
+      log: log,
+      debug: log,
+      verbose: log,
       info: console.info.bind(console),
       warn: console.warn.bind(console),
       error: console.error.bind(console)

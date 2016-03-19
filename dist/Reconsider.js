@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.FUNC_NAME_UP = exports.FUNC_NAME_DOWN = undefined;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
@@ -38,11 +39,15 @@ var FUNC_NAME_UP = 'up';
 var FUNC_NAME_DOWN = 'down';
 
 var Reconsider = function () {
-  function Reconsider(r, config, logger) {
+  function Reconsider(r) {
+    var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    var logger = arguments[2];
+
     _classCallCheck(this, Reconsider);
 
     this.r = r;
-    this.config = (0, _deepmerge2.default)(defaults, config || {});
+    // @todo Do we need migrations config to be a separate object, thus introducing another dependency?
+    this.config = (0, _deepmerge2.default)(defaults, config);
     this.logger = (0, _util.getLoggerObject)(logger);
 
     this._ops = {};
@@ -63,7 +68,6 @@ var Reconsider = function () {
 
       var logger = this.logger;
 
-
       logger.info('↑ Performing database migrations ↑');
 
       return this._init().then(function () {
@@ -82,7 +86,6 @@ var Reconsider = function () {
       var _this2 = this;
 
       var logger = this.logger;
-
 
       logger.info('↓ Reverting database migrations ↓');
 
@@ -111,7 +114,6 @@ var Reconsider = function () {
       var logger = this.logger;
       var dir = this.config.migrations.dir;
 
-
       logger.debug('Reading list of migrations from directory ' + dir + '.');
 
       if (!pending && !completed) {
@@ -119,11 +121,13 @@ var Reconsider = function () {
         throw new Error('Retreiving neither pending nor completed migrations is nonsensical.');
       }
 
-      var infoObjects = void 0;
+      var infoObjects = undefined;
+
+      var completedMigrations = this.migrationsTable.orderBy(this.r.desc('completed')).run();
 
       if (!pending && completed) {
         // Retrieve only completed migrations (i.e. only those stored in the info table)
-        infoObjects = this.migrationsTable.run();
+        infoObjects = completedMigrations;
       } else {
         infoObjects = readDirAsync(dir)
         // Filter out all non .js files
@@ -139,7 +143,7 @@ var Reconsider = function () {
           });
         }).then(function (migrationIds) {
           // Retrieve a list of all completed migrations
-          return _this3.migrationsTable.run().then(function (completedMigrations) {
+          return completedMigrations.then(function (completedMigrations) {
             // Return an array of migration info objects - using data retrieved from the table if available, and an
             // object with it's "completed" property set to false for pending ones
             return migrationIds.map(function (id) {
@@ -216,7 +220,6 @@ var Reconsider = function () {
       var logger = this.logger;
       var db = this.config.db;
 
-
       return r.dbList().run().then(function (dbs) {
         if (!dbs.includes(db)) {
           var _ret = function () {
@@ -245,8 +248,8 @@ var Reconsider = function () {
       var _this6 = this;
 
       var logger = this.logger;
+      var r = this.r;
       var tableName = this.config.migrations.table;
-
 
       return this.db.tableList().run().then(function (tables) {
         if (!tables.includes(tableName)) {
@@ -256,7 +259,9 @@ var Reconsider = function () {
             var start = new Date();
 
             return {
-              v: _this6.db.tableCreate(tableName).run().then(function () {
+              v: r.tableCreate(tableName).run().then(function () {
+                return r.table(tableName).indexCreate('completed').run();
+              }).then(function () {
                 return _this6._registerOp('_create_migrations_table', start);
               }).then(function () {
                 return logger.info('⤷ Migrations table ' + tableName + ' created successfully.');
@@ -281,8 +286,7 @@ var Reconsider = function () {
       var _this7 = this;
 
       var logger = this.logger;
-
-      var db = this.db;
+      var r = this.r;
 
       return _bluebird2.default.mapSeries(migrations, function (migration) {
         var id = migration.id;
@@ -293,8 +297,7 @@ var Reconsider = function () {
 
         var start = new Date();
 
-        // @todo does it make sense to pass in both "db" and "r"? Don't think it does.
-        return func(db, logger, _this7.r).then(function () {
+        return func(r, logger).then(function () {
           var completed = new Date();
 
           _this7._registerOp(id, start, completed);
@@ -319,3 +322,5 @@ var Reconsider = function () {
 }();
 
 exports.default = Reconsider;
+exports.FUNC_NAME_DOWN = FUNC_NAME_DOWN;
+exports.FUNC_NAME_UP = FUNC_NAME_UP;

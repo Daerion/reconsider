@@ -15,9 +15,10 @@ const FUNC_NAME_UP = 'up'
 const FUNC_NAME_DOWN = 'down'
 
 class Reconsider {
-  constructor (r, config, logger) {
+  constructor (r, config = { }, logger) {
     this.r = r
-    this.config = deepMerge(defaults, config || { })
+    // @todo Do we need migrations config to be a separate object, thus introducing another dependency?
+    this.config = deepMerge(defaults, config)
     this.logger = getLoggerObject(logger)
 
     this._ops = { }
@@ -75,8 +76,10 @@ class Reconsider {
 
     let infoObjects
 
+    const completedMigrations = this.migrationsTable.orderBy(this.r.desc('completed')).run()
+
     if (!pending && completed) { // Retrieve only completed migrations (i.e. only those stored in the info table)
-      infoObjects = this.migrationsTable.run()
+      infoObjects = completedMigrations
     } else {
       infoObjects = readDirAsync(dir)
         // Filter out all non .js files
@@ -85,7 +88,7 @@ class Reconsider {
         .then((jsFiles) => jsFiles.map((file) => file.substr(0, file.lastIndexOf('.js'))))
         .then((migrationIds) => {
           // Retrieve a list of all completed migrations
-          return this.migrationsTable.run().then((completedMigrations) => {
+          return completedMigrations.then((completedMigrations) => {
             // Return an array of migration info objects - using data retrieved from the table if available, and an
             // object with it's "completed" property set to false for pending ones
             return migrationIds.map((id) => completedMigrations.find((el) => el.id === id) || { id, completed: false })
@@ -151,7 +154,7 @@ class Reconsider {
   }
 
   _createMigrationsTable () {
-    const { logger, config: { migrations: { table: tableName } } } = this
+    const { logger, r, config: { migrations: { table: tableName } } } = this
 
     return this.db.tableList().run().then((tables) => {
       if (!tables.includes(tableName)) {
@@ -159,7 +162,8 @@ class Reconsider {
 
         const start = new Date()
 
-        return this.db.tableCreate(tableName).run()
+        return r.tableCreate(tableName).run()
+          .then(() => r.table(tableName).indexCreate('completed').run())
           .then(() => this._registerOp('_create_migrations_table', start))
           .then(() => logger.info(`⤷ Migrations table ${tableName} created successfully.`))
       }
@@ -173,8 +177,7 @@ class Reconsider {
   }
 
   _runMigrationFunctions (migrations, functionName) {
-    const { logger } = this
-    const db = this.db
+    const { logger, r } = this
 
     return Promise.mapSeries(migrations, (migration) => {
       const { id } = migration
@@ -184,8 +187,7 @@ class Reconsider {
 
       const start = new Date()
 
-      // @todo does it make sense to pass in both "db" and "r"? Don't think it does.
-      return func(db, logger, this.r)
+      return func(r, logger)
         .then(() => {
           const completed = new Date()
 
@@ -198,3 +200,4 @@ class Reconsider {
 }
 
 export default Reconsider
+export { FUNC_NAME_DOWN, FUNC_NAME_UP }
