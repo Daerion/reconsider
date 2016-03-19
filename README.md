@@ -80,6 +80,21 @@ Currently, the config object passed into the Reconsider constructor supports the
 | `tableName` | `_reconsider_migration` | Database table containing information about previously run migrations |
 | `logLevel` | `info` | Minimum log level |
 
+### Error Handling
+Reconsider does **not** catch any errors on purpose, it is the caller's responsibility to handle errors appropriately. The basic reason for this is that handling migration errors would either involve too much guesswork or introduce a host of new config options for no good reason (Revert everything? Don't revert anything? Attempt to call the failed migration's `down` method?).
+
+```js
+recon.migrateUp()
+  .then((ops) => console.dir(ops))
+  .catch((err) => {
+    // Handle error here
+  })
+```
+
+One consequence of Reconsider's lack of error catching is that an error in any migration will prevent all subsequent migrations from running. This, too, is intended behavior, since database migrations will more often than not rely on changes introduced by previous migrations.
+Since no automatic rollback is performed, and since all successful migrations will still register, `migrateUp` and `migrateDown` can safely be called again once the problem has been resolved.
+ 
+This should also encourage the use to write small migrations that change one thing at a time, as opposed to huge migration files with several chained `.then`s. 
 
 ### Logging
 Reconsider will output various messages to stdout by default, using `console.log`, `console.info` and `console.warn` as appropriate. All output is categorized into one of the following log levels: `debug`, `verbose`, `info`, `warn`, `error`. Minimum log level can be set via the `logLevel` config option.
