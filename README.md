@@ -37,7 +37,7 @@ module.exports = {
 ```
 
 ### Running Migrations
-When instantiating the Reconsider class, you must provide it with an already connected rethinkdbdash object and a database name.
+When instantiating the Reconsider class, you must provide it with an already connected rethinkdbdash object and a database name. Reconsider will attempt to create both the database and it's own migrations table if either don't exist.
 
 ```js
 import rethinkdb from 'rethinkdbdash'
@@ -69,6 +69,15 @@ const ops = await recon.migrateUp()
 ```
 
 ### Configuration Options
+Currently, the config object passed into the Reconsider constructor supports the following properties:
+
+| Property | Default | Description |
+| --- | --- | --- |
+| `db` |  | Database name (*required*)  |
+| `sourceDir` | `migrations/` | Directory containing the migrations |
+| `tableName` | `_reconsider_migration` | Database table containing information about previously run migrations |
+| `logLevel` | `info` | Minimum log level |
+
 
 ### Logging
 Reconsider will output various messages to stdout by default, using `console.log`, `console.info` and `console.warn` as appropriate. All output is categorized into one of the following log levels: `debug`, `verbose`, `info`, `warn`, `error`. Minimum log level can be set via the `logLevel` config option.
@@ -91,6 +100,9 @@ Alternatively, you can provide a custom logger implementation, e.g. an instance 
 const myLoggerInstance = getLoggerInstanceSomehow()
 const recon = new Reconsider(r, { db: 'my_database' }, myLoggerInstance)
 ```
+
+## API Docs
+API documentation is in [jsdoc](https://github.com/jsdoc3/jsdoc) format and can be found in `src/Reconsider.js`. 
 
 ## Author
 [Michael Smesnik](https://github.com/daerion)
