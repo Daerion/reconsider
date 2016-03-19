@@ -1,8 +1,5 @@
 {
   "db": null,
-  "migrations": {
-    "dir": "migrations",
-    "table": "_reconsider_migrations"
-  },
-  "swallowErrors": false
+  "sourceDir": "migrations",
+  "tableName": "_reconsider_migration"
 }

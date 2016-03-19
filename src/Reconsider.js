@@ -1,6 +1,5 @@
 'use strict'
 
-import deepMerge from 'deepmerge'
 import fs from 'fs'
 import path from 'path'
 import Promise from 'bluebird'
@@ -14,11 +13,13 @@ const defaults = require('../defaults.json')
 const FUNC_NAME_UP = 'up'
 const FUNC_NAME_DOWN = 'down'
 
+/**
+ *
+ */
 class Reconsider {
   constructor (r, config = { }, logger) {
     this.r = r
-    // @todo Do we need migrations config to be a separate object, thus introducing another dependency?
-    this.config = deepMerge(defaults, config)
+    this.config = Object.assign({}, defaults, config)
     this.logger = getLoggerObject(logger)
 
     this._ops = { }
@@ -32,12 +33,8 @@ class Reconsider {
     }
   }
 
-  get db () {
-    return this.r.db(this.config.db)
-  }
-
   get migrationsTable () {
-    return this.db.table(this.config.migrations.table)
+    return this.r.table(this.config.tableName)
   }
 
   migrateUp () {
@@ -66,9 +63,9 @@ class Reconsider {
   }
 
   getMigrations (pending = true, completed = false) {
-    const { logger, config: { migrations: { dir } } } = this
+    const { logger, config: { sourceDir } } = this
 
-    logger.debug(`Reading list of migrations from directory ${dir}.`)
+    logger.debug(`Reading list of migrations from directory ${sourceDir}.`)
 
     if (!pending && !completed) { // Someone *will* eventually do this
       throw new Error('Retreiving neither pending nor completed migrations is nonsensical.')
@@ -81,7 +78,7 @@ class Reconsider {
     if (!pending && completed) { // Retrieve only completed migrations (i.e. only those stored in the info table)
       infoObjects = completedMigrations
     } else {
-      infoObjects = readDirAsync(dir)
+      infoObjects = readDirAsync(sourceDir)
         // Filter out all non .js files
         .then((files) => files.filter((file) => file.endsWith('.js')))
         // Cut off filename extension so only the IDs remain
@@ -106,8 +103,8 @@ class Reconsider {
   }
 
   getMigration (info) {
-    const { logger, config: { migrations: { dir } } } = this
-    const filepath = path.resolve(dir, `${info.id}.js`)
+    const { logger, config: { sourceDir } } = this
+    const filepath = path.resolve(sourceDir, `${info.id}.js`)
 
     logger.debug(`Attempting to require('${filepath}')`)
 
@@ -154,9 +151,9 @@ class Reconsider {
   }
 
   _createMigrationsTable () {
-    const { logger, r, config: { migrations: { table: tableName } } } = this
+    const { logger, r, config: { tableName } } = this
 
-    return this.db.tableList().run().then((tables) => {
+    return this.r.tableList().run().then((tables) => {
       if (!tables.includes(tableName)) {
         logger.info(`↗ Migrations table ${tableName} does not exist - creating.`)
 

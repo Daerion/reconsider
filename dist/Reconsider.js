@@ -9,10 +9,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _deepmerge = require('deepmerge');
-
-var _deepmerge2 = _interopRequireDefault(_deepmerge);
-
 var _fs = require('fs');
 
 var _fs2 = _interopRequireDefault(_fs);
@@ -46,8 +42,7 @@ var Reconsider = function () {
     _classCallCheck(this, Reconsider);
 
     this.r = r;
-    // @todo Do we need migrations config to be a separate object, thus introducing another dependency?
-    this.config = (0, _deepmerge2.default)(defaults, config);
+    this.config = Object.assign({}, defaults, config);
     this.logger = (0, _util.getLoggerObject)(logger);
 
     this._ops = {};
@@ -112,12 +107,11 @@ var Reconsider = function () {
       var pending = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
       var completed = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
       var logger = this.logger;
-      var dir = this.config.migrations.dir;
+      var sourceDir = this.config.sourceDir;
 
-      logger.debug('Reading list of migrations from directory ' + dir + '.');
+      logger.debug('Reading list of migrations from directory ' + sourceDir + '.');
 
       if (!pending && !completed) {
-        // Someone *will* eventually do this
         throw new Error('Retreiving neither pending nor completed migrations is nonsensical.');
       }
 
@@ -126,35 +120,25 @@ var Reconsider = function () {
       var completedMigrations = this.migrationsTable.orderBy(this.r.desc('completed')).run();
 
       if (!pending && completed) {
-        // Retrieve only completed migrations (i.e. only those stored in the info table)
         infoObjects = completedMigrations;
       } else {
-        infoObjects = readDirAsync(dir)
-        // Filter out all non .js files
-        .then(function (files) {
+        infoObjects = readDirAsync(sourceDir).then(function (files) {
           return files.filter(function (file) {
             return file.endsWith('.js');
           });
-        })
-        // Cut off filename extension so only the IDs remain
-        .then(function (jsFiles) {
+        }).then(function (jsFiles) {
           return jsFiles.map(function (file) {
             return file.substr(0, file.lastIndexOf('.js'));
           });
         }).then(function (migrationIds) {
-          // Retrieve a list of all completed migrations
           return completedMigrations.then(function (completedMigrations) {
-            // Return an array of migration info objects - using data retrieved from the table if available, and an
-            // object with it's "completed" property set to false for pending ones
             return migrationIds.map(function (id) {
               return completedMigrations.find(function (el) {
                 return el.id === id;
               }) || { id: id, completed: false };
             });
           });
-        })
-        // Unless we're including completed migrations too, return only those with their "completed" property set to false
-        .then(function (migrationInfo) {
+        }).then(function (migrationInfo) {
           return !completed ? migrationInfo.filter(function (_ref2) {
             var completed = _ref2.completed;
             return completed === false;
@@ -162,13 +146,9 @@ var Reconsider = function () {
         });
       }
 
-      return infoObjects
-      // Require each file and see if it exports an "up" and a "down" function
-      .then(function (info) {
+      return infoObjects.then(function (info) {
         return info.map(_this3.getMigration.bind(_this3));
-      })
-      // Filter out all invalid migrations
-      .then(function (migrations) {
+      }).then(function (migrations) {
         return migrations.filter(function (m) {
           return !!m;
         });
@@ -178,9 +158,9 @@ var Reconsider = function () {
     key: 'getMigration',
     value: function getMigration(info) {
       var logger = this.logger;
-      var dir = this.config.migrations.dir;
+      var sourceDir = this.config.sourceDir;
 
-      var filepath = _path2.default.resolve(dir, info.id + '.js');
+      var filepath = _path2.default.resolve(sourceDir, info.id + '.js');
 
       logger.debug('Attempting to require(\'' + filepath + '\')');
 
@@ -249,9 +229,9 @@ var Reconsider = function () {
 
       var logger = this.logger;
       var r = this.r;
-      var tableName = this.config.migrations.table;
+      var tableName = this.config.tableName;
 
-      return this.db.tableList().run().then(function (tables) {
+      return this.r.tableList().run().then(function (tables) {
         if (!tables.includes(tableName)) {
           var _ret2 = function () {
             logger.info('↗ Migrations table ' + tableName + ' does not exist - creating.');
@@ -307,14 +287,9 @@ var Reconsider = function () {
       });
     }
   }, {
-    key: 'db',
-    get: function get() {
-      return this.r.db(this.config.db);
-    }
-  }, {
     key: 'migrationsTable',
     get: function get() {
-      return this.db.table(this.config.migrations.table);
+      return this.r.table(this.config.tableName);
     }
   }]);
 

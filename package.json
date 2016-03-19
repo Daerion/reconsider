@@ -17,8 +17,7 @@
   "author": "Michael Smesnik <ms@tailored-apps.com>",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "^3.3.4",
-    "deepmerge": "^0.2.10"
+    "bluebird": "^3.3.4"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",

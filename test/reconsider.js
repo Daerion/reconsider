@@ -11,7 +11,7 @@ import Reconsider from '../dist/Reconsider'
 const migrationsDir = path.resolve(__dirname, 'util/migrations')
 
 function getReconsiderObject () {
-  return new Reconsider(r, { db: dbName, migrations: { dir: migrationsDir } })
+  return new Reconsider(r, { db: dbName, sourceDir: migrationsDir })
 }
 
 describe('Reconsider class', function () {
@@ -56,7 +56,7 @@ describe('Reconsider class', function () {
 
     const ids = migrations.map(({ id }) => id)
 
-    expect(ids, 'list of migration ids').to.have.members([ '01-create-tables', '03-insert-data' ])
+    expect(ids, 'list of migration ids').to.have.members([ '01-create-tables', '03-insert-data', '05-more-tables' ])
     expect(ids, 'list of migration ids').to.not.include.members([ '02-invalid', '04-completed' ])
 
     // @todo Test for other param combinations
