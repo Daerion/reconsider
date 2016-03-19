@@ -9,7 +9,35 @@ npm install --save reconsider
 ```
 
 ## Usage
-By default, Reconsider will attempt to run all migrations found in the `migrations/` directory of the current process. When instantiating the Reconsider class, you must provide it with an already connected rethinkdbdash object and a database name.
+### Defining Migrations
+Each migration must be a module exporting an object with an `up` and a `down` function, residing in the configured migrations directory (`migrations/` by default). Both methods will be passed the rethinkdb driver instance as their first parameter, and the logger instance as the second one. Since all the database operations performed in a migration are inherently async, both methods must return a Promise.
+
+#### Sample Migration File
+```js
+// File migrations/001-create-tables.js
+
+'use strict'
+
+const tableName = 'my_table'
+
+module.exports = {
+  up: function (r, logger) {
+    logger.verbose(`Creating table ${tableName}.`)
+    
+    return r.tableCreate(tableName).run()
+      .then(() => r.table(tableName).indexCreate('some_property').run())
+  },
+  
+  down: function (r, logger) {
+    logger.verbose(`Dropping table ${tableName}.`)
+    
+    return r.tableDrop(tableName).run()      
+  }
+}
+```
+
+### Running Migrations
+When instantiating the Reconsider class, you must provide it with an already connected rethinkdbdash object and a database name.
 
 ```js
 import rethinkdb from 'rethinkdbdash'
@@ -19,7 +47,9 @@ const r = rethinkdb({ host: 'localhost', db })
 const recon = new Reconsider(r, { db })
 ```
 
-Migrating up or down is as simple as calling the `migrateUp()` or `migrateDown()` method of the Reconsider instance. Both these methods will return a promise that resolves to an array of operation info objects, each one of them containing an `id` and an `elapsed` property. 
+Migrating up or down is as simple as calling the `migrateUp()` or `migrateDown()` method of the Reconsider instance. Both these methods will return a promise that resolves to an array of operation info objects, each one of them containing an `id` and an `elapsed` property.
+When migrating up, Reconsider will attempt to run all pending migrations found in the `migrations/` directory of the current process by default. When migrating down, Reconsider will revert all migrations stored in the `_reconsider_migration` table.
+Once a migration has been run successfully, it will not be run again on subsequent invocations of the `migrateUp` method, unless it has been reverted via `migrateDown()`.
 
 ```js
 // Run all pending migrations
@@ -54,7 +84,7 @@ const recon = new Reconsider(r, {
 const recon = new Reconsider(r, { db: 'my_database' }, false)
 ```
  
-Alternatively, you can provide a custom logger implementation, e.g. an instance of [winston](https://github.com/winstonjs/winston) or similar. When doing so, the provided object must implement methods for all supported log levels. Note that setting a `logLevel` will have no effect in this case, since Reconsider will assume that your logger as already been configured appropriately.
+Alternatively, you can provide a custom logger implementation, e.g. an instance of [winston](https://github.com/winstonjs/winston) or similar. When doing so, the provided object must implement methods for all supported log levels. Note that setting a `logLevel` via the config object will have no effect in this case, since Reconsider will assume that your logger as already been configured appropriately.
 
 ```js
 // Provide custom logger implementation
