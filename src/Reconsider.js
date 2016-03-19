@@ -28,7 +28,10 @@ class Reconsider {
    * Create a new Reconsider instance
    *
    * @param {function} r - An already connected rethinkdbdash instance
-   * @param {object} [config] - Config object
+   * @param {object} config - Config object
+   * @param {string} config.db - Database name
+   * @param {string} [config.sourceDir] - Directory containing migrations files
+   * @param {string} [config.tableName] - rethinkdb table name containing migration information (will be created automatically)
    * @param {object} [logger] - logger object
    * @public
    */
