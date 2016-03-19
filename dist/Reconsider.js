@@ -25,6 +25,8 @@ var _util = require('./util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var readDirAsync = _bluebird2.default.promisify(_fs2.default.readdir);
@@ -58,7 +60,7 @@ var Reconsider = function () {
 
   _createClass(Reconsider, [{
     key: 'migrateUp',
-    value: function migrateUp() {
+    value: function migrateUp(exclude) {
       var _this = this;
 
       var logger = this.logger;
@@ -66,18 +68,25 @@ var Reconsider = function () {
       logger.info('↑ Performing database migrations ↑');
 
       return this._init().then(function () {
-        return _this.getMigrations();
+        return _this.getMigrations(true, false, exclude);
       }).then(function (migrations) {
         return _this._runMigrationFunctions(migrations, FUNC_NAME_UP);
       }).then(function (completionInfo) {
-        return _this.migrationsTable.insert(completionInfo).run();
+        return completionInfo.map(function (_ref) {
+          var id = _ref.id;
+          return id;
+        });
+      }).then(function (ids) {
+        return logger.info('Ran migrations ' + ids.map(function (id) {
+          return '"' + id + '"';
+        }).join(', ') + '.');
       }).then(function () {
         return _this._ops;
       });
     }
   }, {
     key: 'migrateDown',
-    value: function migrateDown() {
+    value: function migrateDown(exclude) {
       var _this2 = this;
 
       var logger = this.logger;
@@ -85,16 +94,18 @@ var Reconsider = function () {
       logger.info('↓ Reverting database migrations ↓');
 
       return this._init().then(function () {
-        return _this2.getMigrations(false, true);
+        return _this2.getMigrations(false, true, exclude);
       }).then(function (migrations) {
         return _this2._runMigrationFunctions(migrations, FUNC_NAME_DOWN);
       }).then(function (completionInfo) {
-        return completionInfo.map(function (_ref) {
-          var id = _ref.id;
+        return completionInfo.map(function (_ref2) {
+          var id = _ref2.id;
           return id;
         });
       }).then(function (revertedIds) {
-        return _this2.migrationsTable.getAll(_this2.r.args(revertedIds)).delete().run();
+        return logger.info('Reverted migrations ' + revertedIds.map(function (id) {
+          return '"' + id + '"';
+        }).join(', ') + '.');
       }).then(function () {
         return _this2._ops;
       });
@@ -102,10 +113,12 @@ var Reconsider = function () {
   }, {
     key: 'getMigrations',
     value: function getMigrations() {
+      var pending = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
+
       var _this3 = this;
 
-      var pending = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
       var completed = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var exclude = arguments.length <= 2 || arguments[2] === undefined ? [] : arguments[2];
       var logger = this.logger;
       var sourceDir = this.config.sourceDir;
 
@@ -139,14 +152,19 @@ var Reconsider = function () {
             });
           });
         }).then(function (migrationInfo) {
-          return !completed ? migrationInfo.filter(function (_ref2) {
-            var completed = _ref2.completed;
+          return !completed ? migrationInfo.filter(function (_ref3) {
+            var completed = _ref3.completed;
             return completed === false;
           }) : migrationInfo;
         });
       }
 
       return infoObjects.then(function (info) {
+        return info.filter(function (_ref4) {
+          var id = _ref4.id;
+          return !exclude.includes(id);
+        });
+      }).then(function (info) {
         return info.map(_this3.getMigration.bind(_this3));
       }).then(function (migrations) {
         return migrations.filter(function (m) {
@@ -165,6 +183,8 @@ var Reconsider = function () {
       logger.debug('Attempting to require(\'' + filepath + '\')');
 
       try {
+        var _Object$assign;
+
         var m = require(filepath);
         var up = m[FUNC_NAME_UP];
         var down = m[FUNC_NAME_DOWN];
@@ -175,7 +195,7 @@ var Reconsider = function () {
           return false;
         }
 
-        return Object.assign({}, info, { up: up, down: down });
+        return Object.assign({}, info, (_Object$assign = {}, _defineProperty(_Object$assign, FUNC_NAME_UP, up), _defineProperty(_Object$assign, FUNC_NAME_DOWN, down), _Object$assign));
       } catch (e) {
         logger.warn('× Error while attempting to require file ' + filepath + ': ' + e.message);
 
@@ -268,12 +288,15 @@ var Reconsider = function () {
       var logger = this.logger;
       var r = this.r;
 
+      var migrationsTable = this.migrationsTable;
+      var migrateUp = functionName === FUNC_NAME_UP;
+
       return _bluebird2.default.mapSeries(migrations, function (migration) {
         var id = migration.id;
 
         var func = migration[functionName];
 
-        logger.info(functionName === FUNC_NAME_UP ? '↑ Running migration ' + id + '...' : '↓ Reverting migration ' + id + '...');
+        logger.info(migrateUp ? '↑ Running migration ' + id + '...' : '↓ Reverting migration ' + id + '...');
 
         var start = new Date();
 
@@ -283,6 +306,10 @@ var Reconsider = function () {
           _this7._registerOp(id, start, completed);
 
           return { id: id, completed: completed };
+        }).then(function (info) {
+          return (migrateUp ? migrationsTable.insert(info).run() : migrationsTable.get(info.id).delete().run()).then(function () {
+            return info;
+          });
         });
       });
     }

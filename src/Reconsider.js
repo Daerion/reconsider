@@ -37,32 +37,33 @@ class Reconsider {
     return this.r.table(this.config.tableName)
   }
 
-  migrateUp () {
+  migrateUp (exclude) {
     const { logger } = this
 
     logger.info('↑ Performing database migrations ↑')
 
     return this._init()
-      .then(() => this.getMigrations())
+      .then(() => this.getMigrations(true, false, exclude))
       .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_UP))
-      .then((completionInfo) => this.migrationsTable.insert(completionInfo).run())
+      .then((completionInfo) => completionInfo.map(({ id }) => id))
+      .then((ids) => logger.info(`Ran migrations ${ids.map((id) => `"${id}"`).join(', ')}.`))
       .then(() => this._ops)
   }
 
-  migrateDown () {
+  migrateDown (exclude) {
     const { logger } = this
 
     logger.info('↓ Reverting database migrations ↓')
 
     return this._init()
-      .then(() => this.getMigrations(false, true)) // Retrieve a list of all previously run migrations
+      .then(() => this.getMigrations(false, true, exclude)) // Retrieve a list of all previously run migrations
       .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_DOWN)) // Run the "down" function for each
       .then((completionInfo) => completionInfo.map(({ id }) => id)) // Return an array of IDs of reverted migrations
-      .then((revertedIds) => this.migrationsTable.getAll(this.r.args(revertedIds)).delete().run()) // Delete those from the migrations table
-      .then(() => this._ops) // And finally return operation timing info
+      .then((revertedIds) => logger.info(`Reverted migrations ${revertedIds.map((id) => `"${id}"`).join(', ')}.`))
+      .then(() => this._ops) // Return operation timing info
   }
 
-  getMigrations (pending = true, completed = false) {
+  getMigrations (pending = true, completed = false, exclude = [ ]) {
     const { logger, config: { sourceDir } } = this
 
     logger.debug(`Reading list of migrations from directory ${sourceDir}.`)
@@ -96,6 +97,7 @@ class Reconsider {
     }
 
     return infoObjects
+      .then((info) => info.filter(({ id }) => !exclude.includes(id)))
       // Require each file and see if it exports an "up" and a "down" function
       .then((info) => info.map(this.getMigration.bind(this)))
       // Filter out all invalid migrations
@@ -119,7 +121,7 @@ class Reconsider {
         return false
       }
 
-      return Object.assign({}, info, { up, down })
+      return Object.assign({}, info, { [FUNC_NAME_UP]: up, [FUNC_NAME_DOWN]: down })
     } catch (e) {
       logger.warn(`× Error while attempting to require file ${filepath}: ${e.message}`)
 
@@ -175,12 +177,14 @@ class Reconsider {
 
   _runMigrationFunctions (migrations, functionName) {
     const { logger, r } = this
+    const migrationsTable = this.migrationsTable
+    const migrateUp = functionName === FUNC_NAME_UP
 
     return Promise.mapSeries(migrations, (migration) => {
       const { id } = migration
       const func = migration[functionName]
 
-      logger.info(functionName === FUNC_NAME_UP ? `↑ Running migration ${id}...` : `↓ Reverting migration ${id}...`)
+      logger.info(migrateUp ? `↑ Running migration ${id}...` : `↓ Reverting migration ${id}...`)
 
       const start = new Date()
 
@@ -191,6 +195,10 @@ class Reconsider {
           this._registerOp(id, start, completed)
 
           return { id, completed }
+        })
+        .then((info) => {
+          return (migrateUp ? migrationsTable.insert(info).run() : migrationsTable.get(info.id).delete().run())
+            .then(() => info)
         })
     })
   }
