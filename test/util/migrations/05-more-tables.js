@@ -1,8 +1,11 @@
 'use strict'
 
+// Yeah, I copy-pasted this file. I'm not proud of it, but I reckon there's no need to overengineer this...
+// Still hurt a little though.
+
 import Promise from 'bluebird'
 
-const tables = [ 'foo', 'bar', 'baz' ]
+const tables = [ 'more', 'tables' ]
 
 export function up (r, logger) {
   logger.verbose(`Creating tables ${tables.join(', ')}`)

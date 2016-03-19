@@ -8,8 +8,10 @@ import path from 'path'
 import r, { dbName } from './util/db'
 import Reconsider from '../dist/Reconsider'
 
+const migrationsDir = path.resolve(__dirname, 'util/migrations')
+
 function getReconsiderObject () {
-  return new Reconsider(r, { db: dbName, migrations: { dir: path.resolve(__dirname, 'util/migrations') } })
+  return new Reconsider(r, { db: dbName, migrations: { dir: migrationsDir } })
 }
 
 describe('Reconsider class', function () {
@@ -21,6 +23,7 @@ describe('Reconsider class', function () {
 
   it('should automatically create a database and a migrations table', async function () {
     this.timeout(0)
+
     const tempDb = 'foo123'
     const recon = new Reconsider(r, { db: tempDb })
 
@@ -45,7 +48,7 @@ describe('Reconsider class', function () {
     const recon = getReconsiderObject()
 
     await recon._init()
-    await recon.migrationsTable.insert({ id: '04-completed', completed: '2016-03-03T13:15:49.889Z' }).run()
+    await recon.migrationsTable.insert({ id: '04-completed', completed: new Date() }).run()
 
     const migrations = await recon.getMigrations()
 
@@ -54,10 +57,26 @@ describe('Reconsider class', function () {
     const ids = migrations.map(({ id }) => id)
 
     expect(ids, 'list of migration ids').to.have.members([ '01-create-tables', '03-insert-data' ])
-    expect(ids, 'list of migration ids').to.not.have.members([ '02-invalid', '04-completed' ])
+    expect(ids, 'list of migration ids').to.not.include.members([ '02-invalid', '04-completed' ])
 
     // @todo Test for other param combinations
   })
 
-  it('should run ')
+  it('should be able to run migrations', async function () {
+    this.timeout(0)
+
+    const createdTables = [ 'foo', 'bar', 'baz', 'more', 'tables' ]
+    const recon = getReconsiderObject()
+
+    await recon.migrateUp()
+
+    expect(await r.tableList().run(), 'list of tables').to.include.members(createdTables)
+    expect(await r.table('foo').count().run(), 'rows in table "foo"').to.equal(3)
+    expect(await r.table('bar').count().run(), 'rows in table "bar"').to.equal(6)
+    expect(await r.table('baz').count().run(), 'rows in table "baz"').to.equal(3)
+
+    await recon.migrateDown()
+
+    expect(await r.tableList().run(), 'list of tables').to.not.include.members(createdTables)
+  })
 })
