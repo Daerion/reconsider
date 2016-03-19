@@ -165,42 +165,12 @@ var Reconsider = function () {
           return !exclude.includes(id);
         });
       }).then(function (info) {
-        return info.map(_this3.getMigration.bind(_this3));
+        return info.map(_this3._getMigrationObject.bind(_this3));
       }).then(function (migrations) {
         return migrations.filter(function (m) {
           return !!m;
         });
       });
-    }
-  }, {
-    key: 'getMigration',
-    value: function getMigration(info) {
-      var logger = this.logger;
-      var sourceDir = this.config.sourceDir;
-
-      var filepath = _path2.default.resolve(sourceDir, info.id + '.js');
-
-      logger.debug('Attempting to require(\'' + filepath + '\')');
-
-      try {
-        var _Object$assign;
-
-        var m = require(filepath);
-        var up = m[FUNC_NAME_UP];
-        var down = m[FUNC_NAME_DOWN];
-
-        if (typeof up !== 'function' || typeof down !== 'function') {
-          logger.warn('× Cannot include migration "' + info.id + '": migration files must export an "' + FUNC_NAME_UP + '" and a "' + FUNC_NAME_DOWN + '" function.');
-
-          return false;
-        }
-
-        return Object.assign({}, info, (_Object$assign = {}, _defineProperty(_Object$assign, FUNC_NAME_UP, up), _defineProperty(_Object$assign, FUNC_NAME_DOWN, down), _Object$assign));
-      } catch (e) {
-        logger.warn('× Error while attempting to require file ' + filepath + ': ' + e.message);
-
-        return false;
-      }
     }
   }, {
     key: '_init',
@@ -282,6 +252,36 @@ var Reconsider = function () {
         id: id,
         elapsed: ((finish || new Date()) - start) / 1000
       });
+    }
+  }, {
+    key: '_getMigrationObject',
+    value: function _getMigrationObject(info) {
+      var logger = this.logger;
+      var sourceDir = this.config.sourceDir;
+
+      var filepath = _path2.default.resolve(sourceDir, info.id + '.js');
+
+      logger.debug('Attempting to require(\'' + filepath + '\')');
+
+      try {
+        var _Object$assign;
+
+        var m = require(filepath);
+        var up = m[FUNC_NAME_UP];
+        var down = m[FUNC_NAME_DOWN];
+
+        if (typeof up !== 'function' || typeof down !== 'function') {
+          logger.warn('× Cannot include migration "' + info.id + '": migration files must export an "' + FUNC_NAME_UP + '" and a "' + FUNC_NAME_DOWN + '" function.');
+
+          return false;
+        }
+
+        return Object.assign({}, info, (_Object$assign = {}, _defineProperty(_Object$assign, FUNC_NAME_UP, up), _defineProperty(_Object$assign, FUNC_NAME_DOWN, down), _Object$assign));
+      } catch (e) {
+        logger.warn('× Error while attempting to require file ' + filepath + ': ' + e.message);
+
+        return false;
+      }
     }
   }, {
     key: '_runMigrationFunctions',
