@@ -55,11 +55,11 @@ class Reconsider {
     logger.info('↓ Reverting database migrations ↓')
 
     return this._init()
-      .then(() => this.getMigrations(false, true))
-      .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_DOWN))
-      .then((completionInfo) => completionInfo.map(({id}) => id))
-      .then((revertedIds) => this.migrationsTable.getAll(this.r.args(revertedIds)).delete().run())
-      .then(() => this._ops)
+      .then(() => this.getMigrations(false, true)) // Retrieve a list of all previously run migrations
+      .then((migrations) => this._runMigrationFunctions(migrations, FUNC_NAME_DOWN)) // Run the "down" function for each
+      .then((completionInfo) => completionInfo.map(({ id }) => id)) // Return an array of IDs of reverted migrations
+      .then((revertedIds) => this.migrationsTable.getAll(this.r.args(revertedIds)).delete().run()) // Delete those from the migrations table
+      .then(() => this._ops) // And finally return operation timing info
   }
 
   getMigrations (pending = true, completed = false) {
