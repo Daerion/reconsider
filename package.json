@@ -1,6 +1,6 @@
 {
   "name": "reconsider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A promise based database migration tool for rethinkdb",
   "main": "dist/Reconsider.js",
   "scripts": {
