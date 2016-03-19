@@ -43,15 +43,15 @@ var Reconsider = function () {
 
     _classCallCheck(this, Reconsider);
 
+    if (!r || typeof r !== 'function' || typeof r.db !== 'function') {
+      throw new Error('No or invalid database driver object passed to Reconsider constructor.');
+    }
+
     this.r = r;
     this.config = Object.assign({}, defaults, config);
     this.logger = (0, _util.getLoggerObject)(logger);
 
-    this._ops = {};
-
-    if (!this.r || typeof this.r !== 'function' || typeof this.r.db !== 'function') {
-      throw new Error('No or invalid database driver object passed to Reconsider constructor.');
-    }
+    this._ops = [];
 
     if (!this.config.db) {
       throw new Error('No database name set in Reconsider config.');
@@ -278,7 +278,10 @@ var Reconsider = function () {
   }, {
     key: '_registerOp',
     value: function _registerOp(id, start, finish) {
-      this._ops[id] = ((finish || new Date()) - start) / 1000;
+      this._ops.push({
+        id: id,
+        elapsed: ((finish || new Date()) - start) / 1000
+      });
     }
   }, {
     key: '_runMigrationFunctions',

@@ -14,19 +14,26 @@ const FUNC_NAME_UP = 'up'
 const FUNC_NAME_DOWN = 'down'
 
 /**
- *
+ * Class representing a Reconsider database migration
  */
 class Reconsider {
+  /**
+   * Create a new Reconsider instance
+   *
+   * @param {function} r - An already connected rethinkdbdash instance
+   * @param {object} config - Config object
+   * @param {object} logger - logger object
+   */
   constructor (r, config = { }, logger) {
+    if (!r || typeof r !== 'function' || typeof r.db !== 'function') {
+      throw new Error('No or invalid database driver object passed to Reconsider constructor.')
+    }
+
     this.r = r
     this.config = Object.assign({}, defaults, config)
     this.logger = getLoggerObject(logger)
 
-    this._ops = { }
-
-    if (!this.r || typeof this.r !== 'function' || typeof this.r.db !== 'function') {
-      throw new Error('No or invalid database driver object passed to Reconsider constructor.')
-    }
+    this._ops = [ ]
 
     if (!this.config.db) {
       throw new Error('No database name set in Reconsider config.')
@@ -172,7 +179,10 @@ class Reconsider {
   }
 
   _registerOp (id, start, finish) {
-    this._ops[id] = ((finish || new Date()) - start) / 1000
+    this._ops.push({
+      id,
+      elapsed: ((finish || new Date()) - start) / 1000
+    })
   }
 
   _runMigrationFunctions (migrations, functionName) {
