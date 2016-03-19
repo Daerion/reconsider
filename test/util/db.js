@@ -10,7 +10,9 @@ const dbConfig = {
   db: dbName
 }
 
-const connection = rethinkdb(dbConfig)
+function getConnection (overrides = { }) {
+  return rethinkdb(Object.assign({}, dbConfig, overrides))
+}
 
-export default connection
+export default getConnection
 export { dbName }
