@@ -2,7 +2,7 @@
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 Reconsider is a minimalistic promise based database migration tool for rethinkdb that is meant to be called programmatically. Currently there is no CLI for it, though I do plan to add one in the near future.
- 
+
 Reconsider is not currently compatible with the native rethinkdb driver but instead requires [rethinkdbdash](https://github.com/neumino/rethinkdbdash).
 
 ## Installation
@@ -25,14 +25,14 @@ const tableName = 'my_table'
 module.exports = {
   up: function (r, logger) {
     logger.verbose(`Creating table ${tableName}.`)
-    
+
     return r.tableCreate(tableName).run()
       .then(() => r.table(tableName).indexCreate('some_property').run())
   },
-  
+
   down: function (r, logger) {
     logger.verbose(`Dropping table ${tableName}.`)
-    
+
     return r.tableDrop(tableName).run()      
   }
 }
@@ -92,12 +92,12 @@ recon.migrateUp()
 ```
 
 One consequence of Reconsider's lack of error catching is that an error in any migration will prevent all subsequent migrations from running. This, too, is intended behavior, since database migrations will more often than not rely on changes introduced by previous migrations. Since no automatic rollback is performed, and since all successful migrations will still register, `migrateUp` and `migrateDown` can safely be called again once the problem has been resolved.
- 
-This should also encourage the user to write small migrations that change one thing at a time, as opposed to huge migration files with several chained `.then`s. 
+
+This should also encourage the user to write small migrations that change one thing at a time, as opposed to huge migration files with several chained `.then`s.
 
 ### Logging
 Reconsider will output various messages to stdout by default, using `console.log`, `console.info` and `console.warn` as appropriate. All output is categorized into one of the following log levels: `debug`, `verbose`, `info`, `warn`, `error`. Minimum log level can be set via the `logLevel` config option.
- 
+
 ``` js
 // Use built in logger, don't output anything below "info" level (default config)
 const recon = new Reconsider(r, {
@@ -108,7 +108,7 @@ const recon = new Reconsider(r, {
 // Disable logging
 const recon = new Reconsider(r, { db: 'my_database' }, false)
 ```
- 
+
 Alternatively, you can provide a custom logger implementation, e.g. an instance of [winston](https://github.com/winstonjs/winston) or similar. When doing so, the provided object must implement methods for all supported log levels. Note that setting a `logLevel` via the config object will have no effect in this case, since Reconsider will assume that your logger as already been configured appropriately.
 
 ```js
@@ -118,7 +118,7 @@ const recon = new Reconsider(r, { db: 'my_database' }, myLoggerInstance)
 ```
 
 ## API Docs
-API documentation is in [jsdoc](https://github.com/jsdoc3/jsdoc) format and can be found in `src/Reconsider.js`. 
+Official API documentation lives [here](https://daerion.github.io/reconsider).
 
 ## Author
 [Michael Smesnik](https://github.com/daerion)
