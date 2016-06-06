@@ -33,7 +33,7 @@ module.exports = {
   down: function (r, logger) {
     logger.verbose(`Dropping table ${tableName}.`)
 
-    return r.tableDrop(tableName).run()      
+    return r.tableDrop(tableName).run()
   }
 }
 ```
@@ -110,7 +110,7 @@ const recon = new Reconsider(r, {
 const recon = new Reconsider(r, { db: 'my_database' }, false)
 ```
 
-Alternatively, you can provide a custom logger implementation, e.g. an instance of [winston](https://github.com/winstonjs/winston) or similar. When doing so, the provided object must implement methods for all supported log levels. Note that setting a `logLevel` via the config object will have no effect in this case, since Reconsider will assume that your logger as already been configured appropriately.
+Alternatively, you can provide a custom logger implementation, e.g. an instance of [winston](https://github.com/winstonjs/winston) or similar. When doing so, the provided object must implement methods for all supported log levels. Note that setting a `logLevel` via the config object will have no effect in this case, since Reconsider will assume that your logger has already been configured appropriately.
 
 ```js
 // Provide custom logger implementation
