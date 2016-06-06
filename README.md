@@ -43,6 +43,7 @@ When instantiating the Reconsider class, you must provide it with an already con
 
 ```js
 import rethinkdb from 'rethinkdbdash'
+import Reconsider from 'reconsider' // or `const Reconsider = require('reconsider').default`
 
 const db = 'my_database'
 const r = rethinkdb({ host: 'localhost', db })
