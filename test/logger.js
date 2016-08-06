@@ -6,9 +6,9 @@ import { expect } from 'chai'
 
 import { getLoggerObject } from '../dist/logger'
 
-function noop () { }
-
 describe('getLoggerObject utility function', function () {
+  const noop = function () { }
+
   it('should always return an object with functions for all log levels', function () {
     const levels = [ 'debug', 'verbose', 'info', 'warn', 'error' ]
     const specs = [
