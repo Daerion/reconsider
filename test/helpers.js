@@ -13,17 +13,17 @@ describe('database migration utilities', function () {
   describe('basic functionality', function () {
     const { createMigration } = helpers
 
-    it.skip('should only accept functions as parameters', function () {
+    it('should only accept functions as parameters', function () {
       expect(() => createMigration()).to.throw()
       expect(() => createMigration('foo', 'bar')).to.throw()
       expect(() => createMigration(noop, 'bar')).to.throw()
       expect(() => createMigration(noop, noop)).to.not.throw()
     })
 
-    it.skip('should return an object containing up and down function properties', function () {
+    it('should return an object containing up and down function properties', function () {
       const migration = createMigration(noop, noop)
 
-      expect(migration).to.have.properties([ 'up', 'down' ])
+      expect(migration).to.have.all.keys([ 'up', 'down' ])
       expect(migration.up).to.be.a('function')
       expect(migration.down).to.be.a('function')
     })
