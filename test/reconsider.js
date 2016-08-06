@@ -7,7 +7,7 @@ import { expect } from 'chai'
 import path from 'path'
 
 import getConnection, { dbName } from './util/db'
-import Reconsider from '../dist/Reconsider'
+import Reconsider from '../dist'
 
 const migrationsDir = path.resolve(__dirname, 'util/migrations')
 
