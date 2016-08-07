@@ -1,7 +1,7 @@
 # reconsider
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
-Reconsider is a minimalistic promise based database migration tool for rethinkdb that is meant to be called programmatically. Currently there is no CLI for it, though I do plan to add one in the near future.
+Reconsider is a minimalistic promise based database migration tool for rethinkdb that is meant to be called programmatically. Currently there is no CLI for it, though I am willing to add one if there is any sort of demand for it.
 
 Reconsider is not currently compatible with the native rethinkdb driver but instead requires [rethinkdbdash](https://github.com/neumino/rethinkdbdash).
 
@@ -116,6 +116,44 @@ Alternatively, you can provide a custom logger implementation, e.g. an instance 
 // Provide custom logger implementation
 const myLoggerInstance = getLoggerInstanceSomehow()
 const recon = new Reconsider(r, { db: 'my_database' }, myLoggerInstance)
+```
+
+## Helpers
+As of version 1.1.0, Reconsider includes a small set of helper functions meant to simplify and automate common database migration tasks, namely creating tables or indices. Each of these functions will return a database migration object, i.e. an object exposing `up` and `down` methods, which can then be exported by the migration file.  
+
+### createTablesMigration
+This function will return a migration that will create tables when migrating up and drop these tables when migrating down. `createTablesMigration` expects an array of table names.
+
+```js
+// In file migrations/xx-create-tables.js
+const { helpers } = require('reconsider')
+
+module.exports = helpers.createTablesMigration([ 'first_table', 'second_table' ])
+````
+
+### createIndexMigration
+This function will return a migration that will create indices when migrating up and drop these indices when migrating down. `createIndexMigration` expects an array of index specifications. Each index specification is an object containing a `table` and an `index` property, and optionally an `options` object and/or a `spec` function.
+An `options` object can be anything that `r.indexCreate()` accepts, while the `spec` property must be a function that returns an index definition (which, again, can be anything that `r.indexCreate()` accepts). `spec` will be passed the rethinkdbdash instance when it is executed.
+
+```js
+// In file migrations/xx-create-indices.js
+const { helpers } = require('reconsider')
+const table = 'first_table'
+
+module.exports = helpers.createIndexMigration([
+    { table, index: 'someProp' }, // Simple index
+    { table, index: 'compoundIndex', spec: (r) => [ r.row('firstProp'), r.row('secondProp') ] }, // Compound index
+    { table, index: 'geoProp', options: { geo: true } }, // Geo index
+    { table, index: 'multiIndex', options: { multi: true } }, // Multi index
+    { table, index: 'arbitraryExpr', spec: (r) => (doc) => r.branch(doc.hasFields('foo'), doc('foo'), doc('bar')) } // Index based on an arbitrary expression
+])
+```
+
+## Testing
+A simple Vagrant VM running a RethinkDB server has been included in the `test/misc` folder.
+ 
+```
+npm run test
 ```
 
 ## API Docs
