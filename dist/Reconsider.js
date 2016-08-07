@@ -64,6 +64,7 @@ var Reconsider = function () {
 
       var logger = this.logger;
 
+
       logger.info('↑ Performing database migrations ↑');
 
       return this._init().then(function () {
@@ -80,6 +81,7 @@ var Reconsider = function () {
       var _this2 = this;
 
       var logger = this.logger;
+
 
       logger.info('↓ Reverting database migrations ↓');
 
@@ -103,13 +105,14 @@ var Reconsider = function () {
       var logger = this.logger;
       var sourceDir = this.config.sourceDir;
 
+
       logger.debug('Reading list of migrations from directory ' + sourceDir + '.');
 
       if (!pending && !completed) {
         throw new Error('Retreiving neither pending nor completed migrations is nonsensical.');
       }
 
-      var infoObjects = undefined;
+      var infoObjects = void 0;
 
       var completedMigrations = this.migrationsTable.orderBy(this.r.desc('completed')).run();
 
@@ -171,6 +174,7 @@ var Reconsider = function () {
       var logger = this.logger;
       var db = this.config.db;
 
+
       return r.dbList().run().then(function (dbs) {
         if (!dbs.includes(db)) {
           var _ret = function () {
@@ -201,6 +205,7 @@ var Reconsider = function () {
       var logger = this.logger;
       var r = this.r;
       var tableName = this.config.tableName;
+
 
       return this.r.tableList().run().then(function (tables) {
         if (!tables.includes(tableName)) {

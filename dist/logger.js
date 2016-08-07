@@ -37,7 +37,7 @@ function getLoggerObject(providedLogger) {
   var logger = {};
 
   levels.forEach(function (level, index) {
-    var fn = undefined;
+    var fn = void 0;
 
     if (index < minLevelIndex) {
       fn = noop;
