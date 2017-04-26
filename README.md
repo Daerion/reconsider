@@ -1,6 +1,10 @@
 # reconsider
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
+**DEPRECATED** -
+Use [adbm](https://github.com/daerion/adbm) in combination with the [adbm-rethinkdb](https://github.com/daerion/adbm-rethinkdb) adapter as a replacement if you're on node >= 7.6.0. Helper functions have been moved to `adbm-rethinkdb/helpers`.
+---
+
 Reconsider is a minimalistic promise based database migration tool for rethinkdb that is meant to be called programmatically. Currently there is no CLI for it, though I am willing to add one if there is any sort of demand for it.
 
 Reconsider is not currently compatible with the native rethinkdb driver but instead requires [rethinkdbdash](https://github.com/neumino/rethinkdbdash).
