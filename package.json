@@ -7,7 +7,6 @@
     "test": "mocha --require test/util/babel-register",
     "lint": "standard \"src/**/*.js\" \"test/**/*.js\"",
     "validate": "npm ls",
-    "preversion": "git checkout master && git pull && npm ls",
     "docs": "mkdir -p docs && jsdoc src/ -d docs",
     "deploy-docs": "npm run docs && gh-pages -d docs && rm -rf docs",
     "postpublish": "npm run deploy-docs",
